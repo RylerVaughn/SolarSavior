@@ -1,30 +1,30 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Button, Text, TextInput, View } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MapView from "react-native-maps";
+import * as Location from 'expo-location';
 
 const Tab = createBottomTabNavigator();
 
-function Map() {
+function Map({ hasPermission }) {
   const [mapType, mapTypeSetter] = useState("satellite");
 
   function switchMap(curMapType) {
-    if (curMapType == "satellite") {
-      mapTypeSetter("standard");
-    } else {
-      mapTypeSetter("satellite");
-    }
+    mapTypeSetter((curMapType) => (curMapType == "satellite" ? "standard" : "satellite"));
   }
+
+  const initialCoordinates = getUserCoordinates(hasPermission);
 
   return (
     <View>
       <MapView
+      showsUserLocation={hasPermission}
       mapType={mapType}
       style={{ width: '100%', height: '100%' }}
       initialRegion={{
-        latitude: 37.78825,
-        longitude: -122.4324,
+        latitude: initialCoordinates.latitude,
+        longitude: initialCoordinates.longitude,
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
       }}
@@ -43,10 +43,29 @@ function Welcome() {
     <View>
       <Text>Welcome!</Text>
     </View>
-  )
+  )   
 }
  
+async function userLocationAvailable() {
+  const req =  await Location.requestForegroundPermissionsAsync();
+  if (!req.status) {
+    console.log("User location access not granted.");
+    return false;
+  }
+  console.log("User location access granted.");
+  return true;
+}
+
 function Navigation() {
+  const [hasPermission, setHasPermission] = useState(false);
+
+  useEffect((() => {
+    (async () => {
+      const res = await userLocationAvailable();
+      setHasPermission(res);
+    })()
+  }), [])
+
   return (
       <NavigationContainer>
         <Tab.Navigator>
@@ -54,11 +73,27 @@ function Navigation() {
               {() => <Welcome></Welcome>}
             </Tab.Screen>
             <Tab.Screen name="Map">
-              {() => <Map></Map>}
+              {() => <Map hasPermission={hasPermission}></Map>}
             </Tab.Screen>
           </Tab.Navigator>
         </NavigationContainer>
   )
+}
+
+function getUserCoordinates(hasPermission) {
+  let coordinates;
+
+  if (hasPermission) {
+    Location.getCurrentPositionAsync()
+      .then((coords) => coordinates = coords)
+      .catch((coords) => console.log("Failed to retrieve current user position even though access was granted."));
+  } else {
+    coordinates = {"latitude": 37.78825, "longitude": -122.4324,};
+  } 
+  console.log(`Permission: ${hasPermission}`);
+  console.log(coordinates);
+
+  return coordinates;
 }
 
 export default Navigation;
