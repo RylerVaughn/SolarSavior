@@ -2,7 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Button, Text, TextInput, View } from "react-native";
 import { useState, useEffect } from "react";
-import MapView from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import * as Location from 'expo-location';
 
 const Tab = createBottomTabNavigator();
@@ -33,6 +33,14 @@ function Map({ hasPermission }) {
         onPress={() => switchMap(mapType)}
         style={{width: "20%", height: "10%", color: "white"}}
         ></Button>
+        <Marker
+        title="MyMarker"
+        coordinate={{
+          latitude: initialCoordinates.latitude,
+          longitude: initialCoordinates.longitude
+        }}
+        description="My Great Marker!!">
+        </Marker>
       </MapView>
     </View>
   )
