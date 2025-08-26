@@ -8,7 +8,7 @@ import * as Location from 'expo-location';
 const Tab = createBottomTabNavigator();
 
 function Map({ hasPermission }) {
-  const [initialCoordinates, setInitialCoordinates] = useState(null);
+  const [initialCoordinates, setInitialCoordinates] = useState({latitude: 0, longitude: 0});
   const [mapType, mapTypeSetter] = useState("satellite");
 
   function switchMap(curMapType) {
@@ -19,7 +19,8 @@ function Map({ hasPermission }) {
     if (hasPermission) {
       (async () => {
         let location = await Location.getCurrentPositionAsync({});
-        setInitialCoordinates(location);
+        setInitialCoordinates(location.coords);
+        console.log(`Second useEffect: ${location}`);
       })()
     } else {
       setInitialCoordinates({latitude: 0, longitude: 0});
@@ -35,17 +36,13 @@ function Map({ hasPermission }) {
       showsUserLocation={hasPermission}
       mapType={mapType}
       style={{ width: '100%', height: '100%' }}
-      initialRegion={{
+      region={{
         latitude: initialCoordinates.latitude,
         longitude: initialCoordinates.longitude,
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
       }}
       >
-        <Button title="Swap" 
-        onPress={() => switchMap(mapType)}
-        style={{width: "20%", height: "10%", color: "white"}}
-        ></Button>
         <Marker
         title="MyMarker"
         coordinate={{
@@ -55,6 +52,10 @@ function Map({ hasPermission }) {
         description="My Great Marker!!">
         </Marker>
       </MapView>
+      <Button title="Swap" 
+        onPress={() => switchMap(mapType)}
+        style={{width: "20%", height: "10%", color: "white"}}
+      ></Button>
     </View>
   )
 }
@@ -84,6 +85,7 @@ function Navigation() {
     (async () => {
       const res = await userLocationAvailable();
       setHasPermission(res);
+      console.log(`First Use Effect: ${res}`);
     })()
   }), [])
 
