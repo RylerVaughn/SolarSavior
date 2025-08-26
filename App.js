@@ -8,13 +8,26 @@ import * as Location from 'expo-location';
 const Tab = createBottomTabNavigator();
 
 function Map({ hasPermission }) {
+  const [initialCoordinates, setInitialCoordinates] = useState(null);
   const [mapType, mapTypeSetter] = useState("satellite");
 
   function switchMap(curMapType) {
     mapTypeSetter((curMapType) => (curMapType == "satellite" ? "standard" : "satellite"));
   }
 
-  const initialCoordinates = getUserCoordinates(hasPermission);
+  useEffect(() => {
+    if (hasPermission) {
+      (async () => {
+        let location = await Location.getCurrentPositionAsync({});
+        setInitialCoordinates(location);
+      })()
+    } else {
+      setInitialCoordinates({latitude: 0, longitude: 0});
+    }
+  }, []);
+
+  console.log(initialCoordinates);
+
 
   return (
     <View>
@@ -86,22 +99,6 @@ function Navigation() {
           </Tab.Navigator>
         </NavigationContainer>
   )
-}
-
-function getUserCoordinates(hasPermission) {
-  let coordinates;
-
-  if (hasPermission) {
-    Location.getCurrentPositionAsync()
-      .then((coords) => coordinates = coords)
-      .catch((coords) => console.log("Failed to retrieve current user position even though access was granted."));
-  } else {
-    coordinates = {"latitude": 37.78825, "longitude": -122.4324,};
-  } 
-  console.log(`Permission: ${hasPermission}`);
-  console.log(coordinates);
-
-  return coordinates;
 }
 
 export default Navigation;
