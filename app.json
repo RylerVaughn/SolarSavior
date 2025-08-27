@@ -17,14 +17,21 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app needs your location to show your position on the map.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs your location even when the app is in the background."
-      }
+      },
+      "bundleIdentifier": "com.rynut.solarsavior"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBDVrnV9wQ-aJfqsEWooFB4b5HpD2RrUvg"
+        }
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.rynut.solarsavior"
     },
     "web": {
       "favicon": "./assets/favicon.png"

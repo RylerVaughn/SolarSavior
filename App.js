@@ -20,7 +20,6 @@ function Map({ hasPermission }) {
       (async () => {
         let location = await Location.getCurrentPositionAsync({});
         setInitialCoordinates(location.coords);
-        console.log(`Second useEffect: ${location}`);
       })()
     } else {
       setInitialCoordinates({latitude: 34, longitude: 118});
@@ -84,7 +83,6 @@ function Navigation() {
     (async () => {
       const res = await userLocationAvailable();
       setHasPermission(res);
-      console.log(`First Use Effect: ${res}`);
     })()
   }), [])
 
