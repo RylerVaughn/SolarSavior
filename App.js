@@ -8,7 +8,7 @@ import * as Location from 'expo-location';
 const Tab = createBottomTabNavigator();
 
 function Map({ hasPermission }) {
-  const [initialCoordinates, setInitialCoordinates] = useState({latitude: 0, longitude: 0});
+  const [initialCoordinates, setInitialCoordinates] = useState({latitude: 34, longitude: 118});
   const [mapType, mapTypeSetter] = useState("satellite");
 
   function switchMap(curMapType) {
@@ -23,41 +23,40 @@ function Map({ hasPermission }) {
         console.log(`Second useEffect: ${location}`);
       })()
     } else {
-      setInitialCoordinates({latitude: 0, longitude: 0});
+      setInitialCoordinates({latitude: 34, longitude: 118});
     }
   }, []);
 
   console.log(initialCoordinates);
-
-
-  return (
-    <View>
-      <MapView
-      showsUserLocation={hasPermission}
-      mapType={mapType}
-      style={{ width: '100%', height: '100%' }}
-      region={{
-        latitude: initialCoordinates.latitude,
-        longitude: initialCoordinates.longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      }}
-      >
-        <Marker
-        title="MyMarker"
-        coordinate={{
+  
+    return (
+      <View>
+        <MapView
+        showsUserLocation={hasPermission}
+        mapType={mapType}
+        style={{ width: '100%', height: '100%' }}
+        region={{
           latitude: initialCoordinates.latitude,
-          longitude: initialCoordinates.longitude
+          longitude: initialCoordinates.longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
         }}
-        description="My Great Marker!!">
-        </Marker>
-      </MapView>
-      <Button title="Swap" 
-        onPress={() => switchMap(mapType)}
-        style={{width: "20%", height: "10%", color: "white"}}
-      ></Button>
-    </View>
-  )
+        >
+          <Marker
+          title="MyMarker"
+          coordinate={{
+            latitude: initialCoordinates.latitude,
+            longitude: initialCoordinates.longitude
+          }}
+          description="My Great Marker!!">
+          </Marker>
+        </MapView>
+        <Button title="Swap" 
+          onPress={() => switchMap(mapType)}
+          style={{width: "20%", height: "10%", color: "white"}}
+        ></Button>
+      </View>
+    )
 }
 
 function Welcome() {
