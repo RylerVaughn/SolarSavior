@@ -1,6 +1,6 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Button, Text, TextInput, View } from "react-native";
+import { Button, Text, TextInput, View, StyleSheet } from "react-native";
 import { useState, useEffect } from "react";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from 'expo-location';
@@ -10,10 +10,6 @@ const Tab = createBottomTabNavigator();
 function Map({ hasPermission }) {
   const [initialCoordinates, setInitialCoordinates] = useState({latitude: 34, longitude: 118});
   const [mapType, mapTypeSetter] = useState("satellite");
-
-  function switchMap(curMapType) {
-    mapTypeSetter((curMapType) => (curMapType == "satellite" ? "standard" : "satellite"));
-  }
 
   useEffect(() => {
     if (hasPermission) {
@@ -51,12 +47,51 @@ function Map({ hasPermission }) {
           description="My Great Marker!!">
           </Marker>
         </MapView>
-        <Button title="Swap" 
-          onPress={() => switchMap(mapType)}
-          style={{width: "20%", height: "10%", color: "white"}}
-        ></Button>
+
+        <SwapMapButton mapState={mapType} mapStateSetter={mapTypeSetter}/>
+        <LeadPlacementToggle/>
+
       </View>
     )
+}
+
+function LeadPlacementMenu() {
+  return (
+    <View>
+      <Text>Lead Menu!!</Text>
+    </View>
+  )
+}
+
+function LeadPlacementToggle() {
+  const [menuState, menuStateSetter] = useState(false); 
+
+  return (
+    <View>
+      <View style={styles.toggleLeadMenuContainer}>
+        <Button
+          title="Toggle"
+          onPress={() => menuStateSetter(!menuState)}
+        ></Button>
+      </View>
+      {menuState ? <LeadPlacementMenu/> : <></>}
+    </View>
+  )
+}
+
+function SwapMapButton({ mapState, mapStateSetter }) {
+
+  function switchMap(mapState) {
+    mapStateSetter((mapState) => (mapState == "satellite" ? "standard" : "satellite"));
+  }
+
+  return (
+    <View style={styles.swapMapContainer}>
+      <Button title="Swap" 
+        onPress={() => switchMap(mapState)}
+      ></Button>
+    </View>
+  )
 }
 
 function Welcome() {
@@ -100,5 +135,26 @@ function Navigation() {
         </NavigationContainer>
   )
 }
+
+const styles = StyleSheet.create({
+  swapMapContainer: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    backgroundColor: "white",
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  toggleLeadMenuContainer: {
+    position: "absolute",
+    top: 110, // moved further down
+    right: 20, 
+    backgroundColor: "white",
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+});
+
+
 
 export default Navigation;
