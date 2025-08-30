@@ -13,6 +13,9 @@
       <data android:scheme="https"/>
     </intent>
   </queries>
+   <meta-data
+        android:name="com.google.android.geo.API_KEY"
+        android:value="AIzaSyBDVrnV9wQ-aJfqsEWooFB4b5HpD2RrUvg"/>
   <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="true" android:theme="@style/AppTheme" android:supportsRtl="true">
     <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyBDVrnV9wQ-aJfqsEWooFB4b5HpD2RrUvg"/>
     <meta-data android:name="expo.modules.updates.ENABLED" android:value="false"/>

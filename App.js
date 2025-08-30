@@ -2,7 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Button, Text, TextInput, View } from "react-native";
 import { useState, useEffect } from "react";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from 'expo-location';
 
 const Tab = createBottomTabNavigator();
@@ -31,6 +31,7 @@ function Map({ hasPermission }) {
     return (
       <View>
         <MapView
+        provider={PROVIDER_GOOGLE}
         showsUserLocation={hasPermission}
         mapType={mapType}
         style={{ width: '100%', height: '100%' }}
