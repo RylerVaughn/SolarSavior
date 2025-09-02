@@ -59,7 +59,9 @@ function Map({ hasPermission }) {
         }}>
           {leads.map((lead, idx) => {
             return (
-              <Marker coordinate={lead.coordinates} key={idx}>
+              <Marker coordinate={lead.coordinates} 
+              key={idx}
+              anchor={{x: 0.5, y: 0.5}}>
                 <Image 
                   source={leadTypes[lead.icon]}
                   style={{ width: 40, height: 40 }} // smaller size
