@@ -80,6 +80,8 @@ function LeadPlacementMenu({ visible, setNewLeadState}) {
   const slideAnim = useRef(new Animated.Value(height)).current;
 
   useEffect(() => {
+    // Ensure the lead state is set to "" when the menu is opened and closed.
+    setNewLeadState("");
     Animated.timing(slideAnim, {
       toValue: visible ? height - 200 : height, // 200 is the height of the popup
       duration: 300,
