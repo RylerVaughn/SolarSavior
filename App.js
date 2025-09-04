@@ -19,6 +19,15 @@ function Map({ hasPermission }) {
   const [mapType, mapTypeSetter] = useState("satellite");
   const [newLeadState, setNewLeadState] = useState("");
   const [leads, setLeads] = useState([]);
+  const [toggledButton, toggledButtonSetter] = useState(null);
+
+  function toggleStyleControl(key) {
+    if (toggledButton == key) {
+      return styles.leadIconToggled;
+    } else {
+      return styles.null;
+    };
+  }
 
   function handleMapPress(event) {
     if (newLeadState == "") {
@@ -31,6 +40,7 @@ function Map({ hasPermission }) {
     };
 
     setNewLeadState("");
+    toggledButtonSetter(null);
     setLeads([...leads, newLeadData]);
   }
 
@@ -73,17 +83,21 @@ function Map({ hasPermission }) {
       </MapView>
 
       <SwapMapButton mapState={mapType} mapStateSetter={mapTypeSetter} />
-      <LeadPlacementToggle setNewLeadState={setNewLeadState} />
+      <LeadPlacementToggle 
+      setNewLeadState={setNewLeadState} 
+      toggledButtonSetter={toggledButtonSetter}
+      toggleStyleControl={toggleStyleControl} />
     </View>
   )
 }
 
-function LeadPlacementMenu({ visible, setNewLeadState}) {
+function LeadPlacementMenu({ visible, setNewLeadState, toggledButtonSetter, toggleStyleControl }) {
   const slideAnim = useRef(new Animated.Value(height)).current;
 
   useEffect(() => {
     // Ensure the lead state is set to "" when the menu is opened and closed.
     setNewLeadState("");
+    toggledButtonSetter(null);
     Animated.timing(slideAnim, {
       toValue: visible ? height - 200 : height, // 200 is the height of the popup
       duration: 300,
@@ -96,16 +110,25 @@ function LeadPlacementMenu({ visible, setNewLeadState}) {
       <Text style={styles.leadMenuText}>Choose Lead Type</Text>
 
       <View style={styles.leadMenuRow}>
-        <TouchableOpacity onPress={() => setNewLeadState("null")}>
-          <Image style={styles.leadIcon} source={leadTypes.null} />
+        <TouchableOpacity onPress={() => {
+          setNewLeadState("null");
+          toggledButtonSetter(1);
+        }}>
+          <Image style={[styles.leadIcon, toggleStyleControl(1)]} source={leadTypes.null} />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => setNewLeadState("unsuccessful")}>
-          <Image style={styles.leadIcon} source={leadTypes.unsuccessful} />
+        <TouchableOpacity onPress={() => {
+          setNewLeadState("unsuccessful");
+          toggledButtonSetter(2);
+        }}>
+          <Image style={[styles.leadIcon, toggleStyleControl(2)]} source={leadTypes.unsuccessful} />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => setNewLeadState("successful")}>
-          <Image style={styles.leadIcon} source={leadTypes.successful} />
+        <TouchableOpacity onPress={() => {
+          setNewLeadState("successful");
+          toggledButtonSetter(3);
+        }}>
+          <Image style={[styles.leadIcon, toggleStyleControl(3)]} source={leadTypes.successful} />
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -113,7 +136,7 @@ function LeadPlacementMenu({ visible, setNewLeadState}) {
 }
 
 
-function LeadPlacementToggle({ setNewLeadState }) {
+function LeadPlacementToggle({ setNewLeadState, toggleStyleControl, toggledButtonSetter }) {
   const [menuState, setMenuState] = useState(false);
 
   return (
@@ -124,7 +147,11 @@ function LeadPlacementToggle({ setNewLeadState }) {
           onPress={() => setMenuState(!menuState)}
         />
       </View>
-      <LeadPlacementMenu visible={menuState} setNewLeadState={setNewLeadState} />
+      <LeadPlacementMenu 
+      visible={menuState} 
+      setNewLeadState={setNewLeadState}
+      toggleStyleControl={toggleStyleControl}
+      toggledButtonSetter={toggledButtonSetter} />
     </>
   )
 }
@@ -182,6 +209,7 @@ function Navigation() {
 }
 
 const styles = StyleSheet.create({
+  null: {},
   swapMapContainer: {
     position: "absolute",
     top: 50,
@@ -220,17 +248,26 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   leadMenuRow: {
-  flexDirection: "row",
-  justifyContent: "space-around",
-  marginTop: 15,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginTop: 15,
   },
   leadIcon: {
-    width: 60,
-    height: 60,
-    resizeMode: "contain",
-    marginHorizontal: 10,
+  width: 60,
+  height: 60,
+  resizeMode: "contain",
+  marginHorizontal: 10,
   },
+
+  leadIconToggled: {
+    borderWidth: 3,
+    borderColor: "#007BFF",
+    borderRadius: 30,   // half of width/height → perfect circle
+    padding: 5,         // ensures the border doesn’t overlap the PNG
+  },
+
 });
+
 
 
 export default Navigation;
