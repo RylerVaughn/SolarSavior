@@ -20,6 +20,7 @@ function Map({ hasPermission }) {
   const [newLeadState, setNewLeadState] = useState("");
   const [leads, setLeads] = useState([]);
   const [toggledButton, toggledButtonSetter] = useState(null);
+  const [leadMenuSpecificsIdx, setLeadMenuSpecificsIdx] = useState(null);
 
   function toggleStyleControl(key) {
     if (toggledButton == key) {
@@ -71,7 +72,8 @@ function Map({ hasPermission }) {
             return (
               <Marker coordinate={lead.coordinates} 
               key={idx}
-              anchor={{x: 0.5, y: 0.5}}>
+              anchor={{x: 0.5, y: 0.5}}
+              onPress={() => setLeadMenuSpecificsIdx(idx)}>
                 <Image 
                   source={leadTypes[lead.icon]}
                   style={{ width: 40, height: 40 }} // smaller size
@@ -82,77 +84,14 @@ function Map({ hasPermission }) {
           })}
       </MapView>
 
+      {leadMenuSpecificsIdx != null ? <LeadMoreDetailsMenu idx={leadMenuSpecificsIdx} leads={leads}/> : <></>}
       <SwapMapButton mapState={mapType} mapStateSetter={mapTypeSetter} />
       <LeadPlacementToggle 
-      setNewLeadState={setNewLeadState} 
-      toggledButtonSetter={toggledButtonSetter}
-      toggleStyleControl={toggleStyleControl} />
+        setNewLeadState={setNewLeadState} 
+        toggledButtonSetter={toggledButtonSetter}
+        toggleStyleControl={toggleStyleControl} 
+      />
     </View>
-  )
-}
-
-function LeadPlacementMenu({ visible, setNewLeadState, toggledButtonSetter, toggleStyleControl }) {
-  const slideAnim = useRef(new Animated.Value(height)).current;
-
-  useEffect(() => {
-    // Ensure the lead state is set to "" when the menu is opened and closed.
-    setNewLeadState("");
-    toggledButtonSetter(null);
-    Animated.timing(slideAnim, {
-      toValue: visible ? height - 200 : height, // 200 is the height of the popup
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  }, [visible]);
-
-  return (
-    <Animated.View style={[styles.leadMenu, { transform: [{ translateY: slideAnim }] }]}>
-      <Text style={styles.leadMenuText}>Choose Lead Type</Text>
-
-      <View style={styles.leadMenuRow}>
-        <TouchableOpacity onPress={() => {
-          setNewLeadState("null");
-          toggledButtonSetter(1);
-        }}>
-          <Image style={[styles.leadIcon, toggleStyleControl(1)]} source={leadTypes.null} />
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => {
-          setNewLeadState("unsuccessful");
-          toggledButtonSetter(2);
-        }}>
-          <Image style={[styles.leadIcon, toggleStyleControl(2)]} source={leadTypes.unsuccessful} />
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => {
-          setNewLeadState("successful");
-          toggledButtonSetter(3);
-        }}>
-          <Image style={[styles.leadIcon, toggleStyleControl(3)]} source={leadTypes.successful} />
-        </TouchableOpacity>
-      </View>
-    </Animated.View>
-  );
-}
-
-
-function LeadPlacementToggle({ setNewLeadState, toggleStyleControl, toggledButtonSetter }) {
-  const [menuState, setMenuState] = useState(false);
-
-  return (
-    <>
-      <View style={styles.toggleLeadMenuContainer}>
-        <Button
-          title={menuState ? "Close Menu" : "Open Menu"}
-          onPress={() => setMenuState(!menuState)}
-        />
-      </View>
-      <LeadPlacementMenu 
-      visible={menuState} 
-      setNewLeadState={setNewLeadState}
-      toggleStyleControl={toggleStyleControl}
-      toggledButtonSetter={toggledButtonSetter} />
-    </>
   )
 }
 
@@ -207,6 +146,82 @@ function Navigation() {
     </NavigationContainer>
   )
 }
+
+function LeadPlacementToggle({ setNewLeadState, toggleStyleControl, toggledButtonSetter }) {
+  const [menuState, setMenuState] = useState(false);
+
+  return (
+    <>
+      <View style={styles.toggleLeadMenuContainer}>
+        <Button
+          title={menuState ? "Close Menu" : "Open Menu"}
+          onPress={() => setMenuState(!menuState)}
+        />
+      </View>
+      <LeadPlacementMenu 
+      visible={menuState} 
+      setNewLeadState={setNewLeadState}
+      toggleStyleControl={toggleStyleControl}
+      toggledButtonSetter={toggledButtonSetter} />
+    </>
+  )
+}
+
+
+function LeadPlacementMenu({ visible, setNewLeadState, toggledButtonSetter, toggleStyleControl }) {
+  const slideAnim = useRef(new Animated.Value(height)).current;
+
+  useEffect(() => {
+    // Ensure the lead state is set to "" when the menu is opened and closed.
+    setNewLeadState("");
+    toggledButtonSetter(null);
+    Animated.timing(slideAnim, {
+      toValue: visible ? height - 200 : height, // 200 is the height of the popup
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [visible]);
+
+  return (
+    <Animated.View style={[styles.leadMenu, { transform: [{ translateY: slideAnim }] }]}>
+      <Text style={styles.leadMenuText}>Choose Lead Type</Text>
+
+      <View style={styles.leadMenuRow}>
+        <TouchableOpacity onPress={() => {
+          setNewLeadState("null");
+          toggledButtonSetter(1);
+        }}>
+          <Image style={[styles.leadIcon, toggleStyleControl(1)]} source={leadTypes.null} />
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => {
+          setNewLeadState("unsuccessful");
+          toggledButtonSetter(2);
+        }}>
+          <Image style={[styles.leadIcon, toggleStyleControl(2)]} source={leadTypes.unsuccessful} />
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => {
+          setNewLeadState("successful");
+          toggledButtonSetter(3);
+        }}>
+          <Image style={[styles.leadIcon, toggleStyleControl(3)]} source={leadTypes.successful} />
+        </TouchableOpacity>
+      </View>
+    </Animated.View>
+  );
+}
+
+
+function LeadMoreDetailsMenu({ idx, leads }) {
+  console.log(leads[idx]);
+  return (
+    <View>
+      
+    </View>
+  )
+}
+
 
 const styles = StyleSheet.create({
   null: {},
