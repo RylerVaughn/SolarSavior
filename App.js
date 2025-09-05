@@ -216,8 +216,8 @@ function LeadPlacementMenu({ visible, setNewLeadState, toggledButtonSetter, togg
 function LeadMoreDetailsMenu({ idx, leads }) {
   console.log(leads[idx]);
   return (
-    <View>
-      
+    <View style={{width: "100%", height: "100%", color: "white"}}>
+      <Text>Hello nutter!!</Text>
     </View>
   )
 }
