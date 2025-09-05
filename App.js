@@ -32,19 +32,25 @@ function Map({ hasPermission }) {
   }
 
   function handleMapPress(event) {
-    if (newLeadState == "") {
-      return;
+    // Close the details menu if it’s open
+    if (leadMenuSpecificsIdx !== null) {
+      setLeadMenuSpecificsIdx(null);
+      return; // don’t place a new lead in this case
     }
-    
-    const newLeadData = {
-      coordinates: event.nativeEvent.coordinate,
-      icon: newLeadState
-    };
 
-    setNewLeadState("");
-    toggledButtonSetter(null);
-    setLeads([...leads, newLeadData]);
+    // Place new lead if a type is selected
+    if (newLeadState !== "") {
+      const newLeadData = {
+        coordinates: event.nativeEvent.coordinate,
+        icon: newLeadState
+      };
+
+      setNewLeadState("");
+      toggledButtonSetter(null);
+      setLeads([...leads, newLeadData]);
+    }
   }
+
 
   useEffect(() => {
     if (hasPermission) {
@@ -221,10 +227,11 @@ function LeadPlacementMenu({ visible, setNewLeadState, toggledButtonSetter, togg
 
 function LeadMoreDetailsMenu({ idx, leads }) {
   const slideAnim = useRef(new Animated.Value(height)).current;
+  const lead = leads[idx];
 
   useEffect(() => {
     Animated.timing(slideAnim, {
-      toValue: 0,          // final position at bottom
+      toValue: 0, // final position at bottom
       duration: 300,
       useNativeDriver: true,
     }).start();
@@ -234,11 +241,26 @@ function LeadMoreDetailsMenu({ idx, leads }) {
     <Animated.View
       style={[
         styles.detailsMenu,
-        { transform: [{ translateY: slideAnim }] }  // slides up from bottom
+        { transform: [{ translateY: slideAnim }] },
       ]}
     >
-      <Text style={{ fontSize: 20, fontWeight: "bold" }}>Lead Details</Text>
-      <Text>{JSON.stringify(leads[idx])}</Text>
+      <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}>
+        Lead Details
+      </Text>
+
+      <Image style={styles.leadIcon} source={leadTypes[lead.icon]} />
+
+      {/* Info fields (placeholders for now) */}
+      <View style={{ marginTop: 20 }}>
+        <Text style={styles.fieldLabel}>Name:</Text>
+        <Text style={styles.fieldValue}>[Placeholder Name]</Text>
+
+        <Text style={styles.fieldLabel}>Phone Number:</Text>
+        <Text style={styles.fieldValue}>[Placeholder Phone]</Text>
+
+        <Text style={styles.fieldLabel}>Address:</Text>
+        <Text style={styles.fieldValue}>[Placeholder Address]</Text>
+      </View>
     </Animated.View>
   );
 }
@@ -272,7 +294,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    height: 200,             // height of popup
+    height: 200, // height of popup
     backgroundColor: "white",
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
@@ -293,19 +315,20 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   leadIcon: {
-  width: 60,
-  height: 60,
-  resizeMode: "contain",
-  marginHorizontal: 10,
+    width: 60,
+    height: 60,
+    resizeMode: "contain",
+    marginHorizontal: 10,
   },
 
   leadIconToggled: {
     borderWidth: 3,
     borderColor: "#007BFF",
-    borderRadius: 30,   // half of width/height → perfect circle
-    padding: 5,         // ensures the border doesn’t overlap the PNG
+    borderRadius: 30, // half of width/height → perfect circle
+    padding: 5, // ensures the border doesn’t overlap the PNG
   },
-    detailsMenu: {
+
+  detailsMenu: {
     position: "absolute",
     left: 0,
     right: 0,
@@ -322,7 +345,20 @@ const styles = StyleSheet.create({
     bottom: 0, // ensures it slides up from the bottom
   },
 
+  // New field styles
+  fieldLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginTop: 12,
+    color: "#333",
+  },
+  fieldValue: {
+    fontSize: 16,
+    color: "#555",
+    marginBottom: 8,
+  },
 });
+
 
 
 
