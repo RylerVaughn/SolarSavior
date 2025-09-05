@@ -4,6 +4,7 @@ import { Button, Text, View, StyleSheet, Animated, Dimensions, Image, TouchableO
 import { useState, useEffect, useRef } from "react";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from 'expo-location';
+import { TouchableWithoutFeedback } from "react-native";
 
 const Tab = createBottomTabNavigator();
 const { height } = Dimensions.get("window");
@@ -84,7 +85,12 @@ function Map({ hasPermission }) {
           })}
       </MapView>
 
-      {leadMenuSpecificsIdx != null ? <LeadMoreDetailsMenu idx={leadMenuSpecificsIdx} leads={leads}/> : <></>}
+      {leadMenuSpecificsIdx != null && (
+        <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
+          <LeadMoreDetailsMenu idx={leadMenuSpecificsIdx} leads={leads} />
+        </View>
+      )}
+
       <SwapMapButton mapState={mapType} mapStateSetter={mapTypeSetter} />
       <LeadPlacementToggle 
         setNewLeadState={setNewLeadState} 
@@ -214,13 +220,32 @@ function LeadPlacementMenu({ visible, setNewLeadState, toggledButtonSetter, togg
 
 
 function LeadMoreDetailsMenu({ idx, leads }) {
-  console.log(leads[idx]);
+  const slideAnim = useRef(new Animated.Value(height)).current;
+
+  useEffect(() => {
+    Animated.timing(slideAnim, {
+      toValue: 0,          // final position at bottom
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
   return (
-    <View style={{width: "100%", height: "100%", color: "white"}}>
-      <Text>Hello nutter!!</Text>
-    </View>
-  )
+    <Animated.View
+      style={[
+        styles.detailsMenu,
+        { transform: [{ translateY: slideAnim }] }  // slides up from bottom
+      ]}
+    >
+      <Text style={{ fontSize: 20, fontWeight: "bold" }}>Lead Details</Text>
+      <Text>{JSON.stringify(leads[idx])}</Text>
+    </Animated.View>
+  );
 }
+
+
+
+
 
 
 const styles = StyleSheet.create({
@@ -279,6 +304,22 @@ const styles = StyleSheet.create({
     borderColor: "#007BFF",
     borderRadius: 30,   // half of width/height → perfect circle
     padding: 5,         // ensures the border doesn’t overlap the PNG
+  },
+    detailsMenu: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    height: height * 0.4, // ~2/5 of screen
+    backgroundColor: "white",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    bottom: 0, // ensures it slides up from the bottom
   },
 
 });
