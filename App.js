@@ -70,7 +70,8 @@ function Map({ hasPermission }) {
         address = coordinates;
       }
 
-    console.log(address);
+      const leadSpecs = {address: address};
+      setLeadSpecificDetails([...leadSpecificDetails, leadSpecs]);
 
     }
   }
@@ -116,7 +117,7 @@ function Map({ hasPermission }) {
 
       {leadMenuSpecificsIdx != null && (
         <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
-          <LeadMoreDetailsMenu idx={leadMenuSpecificsIdx} leads={leads} />
+          <LeadMoreDetailsMenu idx={leadMenuSpecificsIdx} leads={leads} leadSpecificDetails={leadSpecificDetails}/>
         </View>
       )}
 
@@ -248,9 +249,10 @@ function LeadPlacementMenu({ visible, setNewLeadState, toggledButtonSetter, togg
 }
 
 
-function LeadMoreDetailsMenu({ idx, leads }) {
+function LeadMoreDetailsMenu({ idx, leads, leadSpecificDetails }) {
   const slideAnim = useRef(new Animated.Value(height)).current;
   const lead = leads[idx];
+  const leadSpecifics = leadSpecificDetails[idx];
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -282,7 +284,7 @@ function LeadMoreDetailsMenu({ idx, leads }) {
         <Text style={styles.fieldValue}>[Placeholder Phone]</Text>
 
         <Text style={styles.fieldLabel}>Address:</Text>
-        <Text style={styles.fieldValue}>[Placeholder Address]</Text>
+        <Text style={styles.fieldValue}>{leadSpecifics.address}</Text>
       </View>
     </Animated.View>
   );
