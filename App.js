@@ -28,6 +28,7 @@ function Map({ hasPermission }) {
   const [toggledButton, toggledButtonSetter] = useState(null);
   const [leadMenuSpecificsIdx, setLeadMenuSpecificsIdx] = useState(null);
   const [leadSpecificDetails, setLeadSpecificDetails] = useState([]);
+  const [menuState, setMenuState] = useState(false);
 
   function toggleStyleControl(key) {
     if (toggledButton == key) {
@@ -115,17 +116,24 @@ function Map({ hasPermission }) {
           })}
       </MapView>
 
-      {leadMenuSpecificsIdx != null && (
-        <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
-          <LeadMoreDetailsMenu idx={leadMenuSpecificsIdx} leads={leads} leadSpecificDetails={leadSpecificDetails}/>
-        </View>
-      )}
+      {leadMenuSpecificsIdx != null && (() => {
+          menuState ? setMenuState(false) : menuState;
+
+          return (
+            <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
+              <LeadMoreDetailsMenu idx={leadMenuSpecificsIdx} leads={leads} leadSpecificDetails={leadSpecificDetails}/>
+            </View>
+          )
+        })()
+      }
 
       <SwapMapButton mapState={mapType} mapStateSetter={mapTypeSetter} />
       <LeadPlacementToggle 
         setNewLeadState={setNewLeadState} 
         toggledButtonSetter={toggledButtonSetter}
         toggleStyleControl={toggleStyleControl} 
+        menuState={menuState}
+        setMenuState={setMenuState}
       />
     </View>
   )
@@ -183,8 +191,7 @@ function Navigation() {
   )
 }
 
-function LeadPlacementToggle({ setNewLeadState, toggleStyleControl, toggledButtonSetter }) {
-  const [menuState, setMenuState] = useState(false);
+function LeadPlacementToggle({ setNewLeadState, toggleStyleControl, toggledButtonSetter, menuState, setMenuState }) {
 
   return (
     <>
