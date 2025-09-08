@@ -4,7 +4,10 @@ import { Button, Text, View, StyleSheet, Animated, Dimensions, Image, TouchableO
 import { useState, useEffect, useRef } from "react";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from 'expo-location';
-import { TouchableWithoutFeedback } from "react-native";
+import GeoCoder from 'react-native-geocoding';
+
+GeoCoder.init("AIzaSyBDVrnV9wQ-aJfqsEWooFB4b5HpD2RrUvg");
+
 
 const Tab = createBottomTabNavigator();
 const { height } = Dimensions.get("window");
@@ -64,7 +67,6 @@ function Map({ hasPermission }) {
   return (
     <View style={{ flex: 1 }}>
       <MapView
-        provider={PROVIDER_GOOGLE}
         onPress={handleMapPress}
         showsUserLocation={hasPermission}
         mapType={mapType}
