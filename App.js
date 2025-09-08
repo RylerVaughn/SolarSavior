@@ -6,7 +6,9 @@ import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from 'expo-location';
 import GeoCoder from 'react-native-geocoding';
 
-GeoCoder.init("AIzaSyBDVrnV9wQ-aJfqsEWooFB4b5HpD2RrUvg");
+const API_KEY = "AIzaSyBDVrnV9wQ-aJfqsEWooFB4b5HpD2RrUvg";
+
+GeoCoder.init(API_KEY);
 
 
 const Tab = createBottomTabNavigator();
@@ -25,6 +27,7 @@ function Map({ hasPermission }) {
   const [leads, setLeads] = useState([]);
   const [toggledButton, toggledButtonSetter] = useState(null);
   const [leadMenuSpecificsIdx, setLeadMenuSpecificsIdx] = useState(null);
+  const [leadSpecificDetails, setLeadSpecificDetails] = useState([]);
 
   function toggleStyleControl(key) {
     if (toggledButton == key) {
@@ -34,23 +37,41 @@ function Map({ hasPermission }) {
     };
   }
 
-  function handleMapPress(event) {
+  async function handleMapPress(event) {
     // Close the details menu if it’s open
     if (leadMenuSpecificsIdx !== null) {
       setLeadMenuSpecificsIdx(null);
       return; // don’t place a new lead in this case
     }
+    
+    const coordinates = event.nativeEvent.coordinate;
 
     // Place new lead if a type is selected
     if (newLeadState !== "") {
       const newLeadData = {
-        coordinates: event.nativeEvent.coordinate,
+        coordinates: coordinates,
         icon: newLeadState
       };
 
+      setLeads([...leads, newLeadData]);
       setNewLeadState("");
       toggledButtonSetter(null);
-      setLeads([...leads, newLeadData]);
+
+      let address;
+
+      try {
+        const res = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinates.latitude},${coordinates.longitude}&key=${API_KEY}`
+        );
+        const data = await res.json();
+        address = data.results[0].formatted_address;
+      } catch (e) {
+        console.log(`Error occured while fetching address: ${e}`);
+        address = coordinates;
+      }
+
+    console.log(address);
+
     }
   }
 
