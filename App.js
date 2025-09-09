@@ -108,7 +108,7 @@ function Map({ hasPermission }) {
               onPress={() => setLeadMenuSpecificsIdx(idx)}>
                 <Image 
                   source={leadTypes[lead.icon]}
-                  style={{ width: 40, height: 40 }} // smaller size
+                  style={{ width: 30, height: 30 }} // smaller size
                   resizeMode="contain"
                 />
               </Marker>
@@ -134,6 +134,7 @@ function Map({ hasPermission }) {
         toggleStyleControl={toggleStyleControl} 
         menuState={menuState}
         setMenuState={setMenuState}
+        setLeadMenuSpecificsIdx={setLeadMenuSpecificsIdx}
       />
     </View>
   )
@@ -191,14 +192,17 @@ function Navigation() {
   )
 }
 
-function LeadPlacementToggle({ setNewLeadState, toggleStyleControl, toggledButtonSetter, menuState, setMenuState }) {
+function LeadPlacementToggle({ setNewLeadState, toggleStyleControl, toggledButtonSetter, menuState, setMenuState, setLeadMenuSpecificsIdx }) {
 
   return (
     <>
       <View style={styles.toggleLeadMenuContainer}>
         <Button
           title={menuState ? "Close Menu" : "Open Menu"}
-          onPress={() => setMenuState(!menuState)}
+          onPress={() => {
+            setMenuState(!menuState);
+            setLeadMenuSpecificsIdx(null);
+          }}
         />
       </View>
       <LeadPlacementMenu 
@@ -296,11 +300,6 @@ function LeadMoreDetailsMenu({ idx, leads, leadSpecificDetails }) {
     </Animated.View>
   );
 }
-
-
-
-
-
 
 const styles = StyleSheet.create({
   null: {},
