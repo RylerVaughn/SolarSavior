@@ -81,24 +81,18 @@ function Map({ hasPermission }) {
 
   // defensive helper to extract count & coordinate from whatever cluster shape the lib provides
   const extractClusterInfo = (cluster) => {
-    // cluster may be shaped like: { properties: { point_count: X }, geometry: { coordinates: [lng, lat] } }
-    // or like: { pointCount: X, coordinate: { latitude, longitude } } depending on versions
     const count =
       cluster?.properties?.point_count ??
       cluster?.properties?.pointCount ??
       cluster?.pointCount ??
-      cluster?.point_count ??
       0;
 
     let coord;
     if (cluster?.geometry?.coordinates) {
-      // geometry: [lng, lat]
       const [lng, lat] = cluster.geometry.coordinates;
       coord = { latitude: lat, longitude: lng };
     } else if (cluster?.coordinate) {
       coord = cluster.coordinate;
-    } else if (cluster?.geometry?.coordinates === undefined && cluster?.latitude && cluster?.longitude) {
-      coord = { latitude: cluster.latitude, longitude: cluster.longitude };
     } else {
       coord = { latitude: initialCoordinates.latitude, longitude: initialCoordinates.longitude };
     }
@@ -106,41 +100,30 @@ function Map({ hasPermission }) {
     return { count, coord };
   };
 
+
   // custom cluster renderer — shows circular badge with count
   const renderCluster = (cluster, onPress) => {
     const { count, coord } = extractClusterInfo(cluster);
-
-    // size scales a bit with count (clamped)
-    const size = Math.min(64, 30 + Math.floor(Math.log10(Math.max(1, count))) * 10);
+    const size = Math.min(64, 30 + Math.log2(count) * 10);
 
     return (
       <Marker
         key={`cluster-${cluster.id ?? count}-${coord.latitude}-${coord.longitude}`}
         coordinate={coord}
-        onPress={() => {
-          // default library onPress is usually passed, call it if available
-          if (typeof onPress === "function") onPress();
-          // zoom a little further just in case onPress wasn't provided or you want to ensure zoom
-          if (mapRef.current && mapRef.current.animateToRegion) {
-            mapRef.current.animateToRegion({
-              latitude: coord.latitude,
-              longitude: coord.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }, 250);
-          }
-        }}
+        onPress={() => onPress && onPress()}
         tracksViewChanges={false}
       >
         <View style={[
-            styles.clusterContainer,
-            { width: size, height: size, borderRadius: size / 2 }
-          ]}>
+          styles.clusterContainer,
+          { width: size, height: size, borderRadius: size / 2 }
+        ]}>
           <Text style={styles.clusterText}>{count}</Text>
         </View>
       </Marker>
     );
   };
+
+
 
   useEffect(() => {
     if (hasPermission) {
@@ -167,26 +150,6 @@ function Map({ hasPermission }) {
         showsUserLocation={hasPermission}
         mapType={mapType}
         style={{ flex: 1 }}
-        // clustering visual props
-        clusterColor="#007BFF"
-        clusterTextColor="#fff"
-        clusterBorderColor="#fff"
-        clusterBorderWidth={1}
-        spiderLineColor="#007BFF"
-        onClusterPress={(cluster) => {
-          // prefer using library's onClusterPress (if it provides the cluster geometry)
-          // but also fallback to our renderCluster onPress behavior
-          const { coord } = extractClusterInfo(cluster);
-          if (mapRef.current && mapRef.current.animateToRegion) {
-            mapRef.current.animateToRegion({
-              latitude: coord.latitude,
-              longitude: coord.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }, 300);
-          }
-        }}
-        // give the library our custom renderer
         renderCluster={renderCluster}
         initialRegion={{
           latitude: initialCoordinates.latitude,
@@ -194,22 +157,21 @@ function Map({ hasPermission }) {
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
-
       >
+
         {leads.map((lead, idx) => {
           return (
             <Marker
-              key={`${lead.coordinates.latitude}-${lead.coordinates.longitude}-${lead.icon}`}
+              key={idx}  // use idx for stability
               coordinate={lead.coordinates}
               anchor={{ x: 0.5, y: 0.5 }}
               onPress={() => setLeadMenuSpecificsIdx(idx)}
-              tracksViewChanges={!loadedIcons[idx]} // false once loaded
+              tracksViewChanges={true}   // 🔑 always redraw
             >
               <Image
                 source={leadTypes[lead.icon]}
                 style={{ width: 30, height: 30 }}
                 resizeMode="contain"
-                onLoad={() => setLoadedIcons(prev => ({ ...prev, [idx]: true }))}
               />
             </Marker>
           )
@@ -399,7 +361,7 @@ function LeadMoreDetailsMenu({ idx, leads, leadSpecificDetails }) {
         <Text style={styles.fieldValue}>[Placeholder Phone]</Text>
 
         <Text style={styles.fieldLabel}>Address:</Text>
-        <Text style={styles.fieldValue}>{leadSpecifics.address}</Text>
+        <Text style={styles.fieldValue}>{leadSpecifics != null ? leadSpecifics.address : "Loading..."}</Text>
       </View>
     </Animated.View>
   );
@@ -510,8 +472,5 @@ clusterText: {
   fontSize: 14,
 },
 });
-
-
-
 
 export default Navigation;
