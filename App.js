@@ -27,17 +27,21 @@ function Map({ hasPermission }) {
   const [leadMenuSpecificsIdx, setLeadMenuSpecificsIdx] = useState(null);
   const [leadSpecificDetails, setLeadSpecificDetails] = useState([]);
   const [menuState, setMenuState] = useState(false);
-  const [region, setRegion] = useState({
+  const [initialRegion, setInitialRegion] = useState({
     latitude: 34.4208,
     longitude: -119.6982,
     latitudeDelta: 0.5,
     longitudeDelta: 0.5,
   })
+  const [region, setRegion] = useState(initialRegion);
+
+  // console.log(region);
 
   useEffect(() => {
     if (hasPermission) {
       (async () => {
         let location = await Location.getCurrentPositionAsync({});
+        setInitialRegion(location.coords);
         setRegion(location.coords);
       })()
     }
@@ -63,10 +67,13 @@ function Map({ hasPermission }) {
 
     if (newLeadState !== "") {
       const newLeadData = {
-        type: "feature",
+        type: "Feature",
         geometry: {
-          type: "point",
-          coordinates: coordinates
+          type: "Point",
+          coordinates: [
+            coordinates.longitude,
+            coordinates.latitude
+          ]
         },
         properties: {
           id: `point-${coordinates.latitude}-${coordinates.longitude}`,
@@ -111,16 +118,17 @@ function Map({ hasPermission }) {
         showsUserLocation={hasPermission}
         mapType={mapType}
         style={{ flex: 1 }}
-        region={region}
+        initialRegion={initialRegion}
         onRegionChangeComplete={(r) => {
+          console.log(r)
           setRegion(r);
         }}
       >
 
-        {/* <Clusterer
+        <Clusterer
           data={leads}
           region={region}
-          MapDimensions={{ width: width, height: height }}
+          mapDimensions={{ width, height }}
           options={{
             radius: 20,
             minPoints: 2,
@@ -129,8 +137,8 @@ function Map({ hasPermission }) {
           renderItem={(item) => {
             const { geometry, properties } = item;
             const coords = {
-              latitude: geometry.coordinates.latitude,
-              longitude: geometry.coordinates.longitude,
+              latitude: geometry.coordinates[1],
+              longitude: geometry.coordinates[0],
             }
             // For clusters, item.properties.cluster_id will exist (or some cluster flag)
             const isCluster = item.properties.cluster_id !== undefined;
@@ -167,7 +175,7 @@ function Map({ hasPermission }) {
               );
             }
           }}
-        /> */}
+        />
         {/* {leads.map((lead, idx) => {
           return (
             <Marker
@@ -481,8 +489,6 @@ clusterText: {
   fontSize: 14,
 },
 });
-
-
 
 export default Navigation;
 
