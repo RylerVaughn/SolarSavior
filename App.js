@@ -150,7 +150,7 @@ function Map({ hasPermission }) {
                   coordinate={coords}
                   anchor={{ x: 0.5, y: 0.5 }}
                 >
-                  <View style={styles.clusterContainer}>
+                  <View style={styles.cluster}>
                     <Text style={styles.clusterText}>
                       {item.properties.point_count ?? "?"}
                     </Text>
@@ -164,7 +164,7 @@ function Map({ hasPermission }) {
                   key={properties.id}
                   coordinate={coords}
                   anchor={{ x: 0.5, y: 0.5 }}
-                  onPress={() => setLeadMenuSpecificsIdx(idx)}
+                  onPress={() => setLeadMenuSpecificsIdx(properties.id)}
                 >
                   <Image
                     source={leadTypes[item.properties.icon]}
@@ -367,7 +367,7 @@ function LeadMoreDetailsMenu({ idx, leads, leadSpecificDetails }) {
         Lead Details
       </Text>
 
-      <Image style={styles.leadIcon} source={leadTypes[lead.icon]} />
+      <Image style={styles.leadIcon} source={leadTypes[lead.properties.icon]} />
 
       {/* Info fields (placeholders for now) */}
       <View style={{ marginTop: 20 }}>
@@ -488,6 +488,18 @@ clusterText: {
   fontWeight: "700",
   fontSize: 14,
 },
+cluster: {
+    backgroundColor: "#007AFF",
+    borderWidth: 2,
+    borderColor: "#fff",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    // Optional: add elevation for Android
+    elevation: 5,
+  },
 });
 
 export default Navigation;
