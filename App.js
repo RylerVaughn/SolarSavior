@@ -6,6 +6,9 @@ import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from 'expo-location';
 import GeoCoder from 'react-native-geocoding';
 import { Clusterer } from "react-native-clusterer";
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from "uuid";
+
 
 const API_KEY = "AIzaSyBDVrnV9wQ-aJfqsEWooFB4b5HpD2RrUvg";
 GeoCoder.init(API_KEY);
@@ -25,7 +28,7 @@ function Map({ hasPermission }) {
   const [leads, setLeads] = useState([]);
   const [toggledButton, toggledButtonSetter] = useState(null);
   const [leadMenuSpecificsIdx, setLeadMenuSpecificsIdx] = useState(null);
-  const [leadSpecificDetails, setLeadSpecificDetails] = useState([]);
+  const [leadSpecificDetails, setLeadSpecificDetails] = useState({});
   const [menuState, setMenuState] = useState(false);
   const [initialRegion, setInitialRegion] = useState({
     latitude: 34.4208,
@@ -34,8 +37,6 @@ function Map({ hasPermission }) {
     longitudeDelta: 0.5,
   })
   const [region, setRegion] = useState(initialRegion);
-
-  // console.log(region);
 
   useEffect(() => {
     if (hasPermission) {
@@ -76,8 +77,8 @@ function Map({ hasPermission }) {
           ]
         },
         properties: {
-          id: `point-${coordinates.latitude}-${coordinates.longitude}`,
-          icon: newLeadState
+          id: uuidv4(),
+          icon: newLeadState,
         }
       }
 
@@ -97,8 +98,13 @@ function Map({ hasPermission }) {
         address = `${coordinates.latitude}, ${coordinates.longitude}`;
       }
 
-      const leadSpecs = { address };
-      setLeadSpecificDetails(prev => [...prev, leadSpecs]);
+      setLeadSpecificDetails(prev => ({
+        ...prev,
+        [newLeadData.properties.id]: {
+          icon: newLeadState,
+          address: address
+        }
+      }));
     }
   }
 
@@ -120,7 +126,6 @@ function Map({ hasPermission }) {
         style={{ flex: 1 }}
         initialRegion={initialRegion}
         onRegionChangeComplete={(r) => {
-          console.log(r)
           setRegion(r);
         }}
       >
@@ -176,32 +181,13 @@ function Map({ hasPermission }) {
             }
           }}
         />
-        {/* {leads.map((lead, idx) => {
-          return (
-            <Marker
-              key={idx}  // use idx for stability
-              coordinate={lead.coordinates}
-              anchor={{ x: 0.5, y: 0.5 }}
-              onPress={() => setLeadMenuSpecificsIdx(idx)}
-              tracksViewChanges={true}   // 🔑 always redraw
-            >
-              <Image
-                source={leadTypes[lead.icon]}
-                style={{ width: 30, height: 30 }}
-                resizeMode="contain"
-              />
-            </Marker>
-          )
-        })} */}
-
 
       </MapView>
 
          {leadMenuSpecificsIdx != null && (
           <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
             <LeadMoreDetailsMenu 
-              idx={leadMenuSpecificsIdx} 
-              leads={leads} 
+              id={leadMenuSpecificsIdx} 
               leadSpecificDetails={leadSpecificDetails}
             />
           </View>
@@ -343,10 +329,9 @@ function LeadPlacementMenu({ visible, setNewLeadState, toggledButtonSetter, togg
 }
 
 
-function LeadMoreDetailsMenu({ idx, leads, leadSpecificDetails }) {
+function LeadMoreDetailsMenu({ id, leadSpecificDetails }) {
   const slideAnim = useRef(new Animated.Value(height)).current;
-  const lead = leads[idx];
-  const leadSpecifics = leadSpecificDetails[idx];
+  const leadSpecifics = leadSpecificDetails[id];
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -367,7 +352,7 @@ function LeadMoreDetailsMenu({ idx, leads, leadSpecificDetails }) {
         Lead Details
       </Text>
 
-      <Image style={styles.leadIcon} source={leadTypes[lead.properties.icon]} />
+      <Image style={styles.leadIcon} source={leadTypes[leadSpecifics.icon]} />
 
       {/* Info fields (placeholders for now) */}
       <View style={{ marginTop: 20 }}>
