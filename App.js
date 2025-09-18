@@ -30,20 +30,23 @@ function Map({ hasPermission }) {
   const [leadMenuSpecificsIdx, setLeadMenuSpecificsIdx] = useState(null);
   const [leadSpecificDetails, setLeadSpecificDetails] = useState({});
   const [menuState, setMenuState] = useState(false);
-  const [initialRegion, setInitialRegion] = useState({
+  const [region, setRegion] = useState({
     latitude: 34.4208,
     longitude: -119.6982,
     latitudeDelta: 0.5,
     longitudeDelta: 0.5,
-  })
-  const [region, setRegion] = useState(initialRegion);
+  });
 
   useEffect(() => {
     if (hasPermission) {
       (async () => {
-        let location = await Location.getCurrentPositionAsync({});
-        setInitialRegion(location.coords);
-        setRegion(location.coords);
+        let { coords } = await Location.getCurrentPositionAsync({});
+        setRegion(prev => ({
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          latitudeDelta: prev.latitudeDelta,
+          longitudeDelta: prev.longitudeDelta,
+        }));
       })()
     }
   }, [hasPermission]);
@@ -124,7 +127,7 @@ function Map({ hasPermission }) {
         showsUserLocation={hasPermission}
         mapType={mapType}
         style={{ flex: 1 }}
-        initialRegion={initialRegion}
+        region={region}
         onRegionChangeComplete={(r) => {
           setRegion(r);
         }}
