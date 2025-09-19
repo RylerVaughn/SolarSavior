@@ -1,6 +1,6 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Button, Text, View, StyleSheet, Animated, Dimensions, Image, TouchableOpacity } from "react-native";
+import { Button, Text, View, StyleSheet, Animated, Dimensions, Image, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useState, useEffect, useRef } from "react";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from 'expo-location';
@@ -36,6 +36,7 @@ function Map({ hasPermission }) {
     latitudeDelta: 0.5,
     longitudeDelta: 0.5,
   });
+  const [userFound, setUserFound] = useState(false);
 
   useEffect(() => {
     if (hasPermission) {
@@ -47,6 +48,7 @@ function Map({ hasPermission }) {
           latitudeDelta: prev.latitudeDelta,
           longitudeDelta: prev.longitudeDelta,
         }));
+        setUserFound(true);
       })()
     }
   }, [hasPermission]);
@@ -119,93 +121,102 @@ function Map({ hasPermission }) {
 
 
   return (
-    <View style={{ flex: 1 }}>
-      <MapView
-        ref={mapRef}
-        provider={PROVIDER_GOOGLE}
-        onPress={handleMapPress}
-        showsUserLocation={hasPermission}
-        mapType={mapType}
-        style={{ flex: 1 }}
-        region={region}
-        onRegionChangeComplete={(r) => {
-          setRegion(r);
-        }}
-      >
-
-        <Clusterer
-          data={leads}
+    <>
+    {userFound ?
+      <View style={{ flex: 1 }}>
+        <MapView
+          ref={mapRef}
+          provider={PROVIDER_GOOGLE}
+          onPress={handleMapPress}
+          showsUserLocation={hasPermission}
+          mapType={mapType}
+          style={{ flex: 1 }}
           region={region}
-          mapDimensions={{ width, height }}
-          options={{
-            radius: 20,
-            minPoints: 2,
-            maxZoom: 16
+          onRegionChangeComplete={(r) => {
+            setRegion(r);
           }}
-          renderItem={(item) => {
-            const { geometry, properties } = item;
-            const coords = {
-              latitude: geometry.coordinates[1],
-              longitude: geometry.coordinates[0],
-            }
-            // For clusters, item.properties.cluster_id will exist (or some cluster flag)
-            const isCluster = item.properties.cluster_id !== undefined;
-            if (isCluster) {
-              // render cluster marker
-              return (
-                <Marker
-                  key={`cluster-${properties.cluster_id}-${coords.latitude}-${coords.longitude}`}
-                  coordinate={coords}
-                  anchor={{ x: 0.5, y: 0.5 }}
-                >
-                  <View style={styles.cluster}>
-                    <Text style={styles.clusterText}>
-                      {item.properties.point_count ?? "?"}
-                    </Text>
-                  </View>
-                </Marker>
-              );
-            } else {
-              // render individual point
-              return (
-                <Marker
-                  key={properties.id}
-                  coordinate={coords}
-                  anchor={{ x: 0.5, y: 0.5 }}
-                  onPress={() => setLeadMenuSpecificsIdx(properties.id)}
-                >
-                  <View style={{ width: 30, height: 30, justifyContent: 'center', alignItems: 'center' }}>
-                    <Image source={leadTypes[item.properties.icon]} style={{ width: 30, height: 30 }} resizeMode="contain" />
-                  </View>
-                  
-                </Marker>
-              );
-            }
-          }}
+        >
+
+          <Clusterer
+            data={leads}
+            region={region}
+            mapDimensions={{ width, height }}
+            options={{
+              radius: 20,
+              minPoints: 2,
+              maxZoom: 16
+            }}
+            renderItem={(item) => {
+              const { geometry, properties } = item;
+              const coords = {
+                latitude: geometry.coordinates[1],
+                longitude: geometry.coordinates[0],
+              }
+              // For clusters, item.properties.cluster_id will exist (or some cluster flag)
+              const isCluster = item.properties.cluster_id !== undefined;
+              if (isCluster) {
+                // render cluster marker
+                return (
+                  <Marker
+                    key={`cluster-${properties.cluster_id}-${coords.latitude}-${coords.longitude}`}
+                    coordinate={coords}
+                    anchor={{ x: 0.5, y: 0.5 }}
+                  >
+                    <View style={styles.cluster}>
+                      <Text style={styles.clusterText}>
+                        {item.properties.point_count ?? "?"}
+                      </Text>
+                    </View>
+                  </Marker>
+                );
+              } else {
+                // render individual point
+                return (
+                  <Marker
+                    key={properties.id}
+                    coordinate={coords}
+                    anchor={{ x: 0.5, y: 0.5 }}
+                    onPress={() => setLeadMenuSpecificsIdx(properties.id)}
+                  >
+                    <View style={{ width: 30, height: 30, justifyContent: 'center', alignItems: 'center' }}>
+                      <Image source={leadTypes[item.properties.icon]} style={{ width: 30, height: 30 }} resizeMode="contain" />
+                    </View>
+                    
+                  </Marker>
+                );
+              }
+            }}
+          />
+
+        </MapView>
+
+          {leadMenuSpecificsIdx != null && (
+            <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
+              <LeadMoreDetailsMenu 
+                id={leadMenuSpecificsIdx} 
+                leadSpecificDetails={leadSpecificDetails}
+              />
+            </View>
+          )} 
+
+
+        <SwapMapButton mapState={mapType} mapStateSetter={mapTypeSetter} />
+        <LeadPlacementToggle
+          setNewLeadState={setNewLeadState}
+          toggledButtonSetter={toggledButtonSetter}
+          toggleStyleControl={toggleStyleControl}
+          menuState={menuState}
+          setMenuState={setMenuState}
+          setLeadMenuSpecificsIdx={setLeadMenuSpecificsIdx}
         />
-
-      </MapView>
-
-         {leadMenuSpecificsIdx != null && (
-          <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
-            <LeadMoreDetailsMenu 
-              id={leadMenuSpecificsIdx} 
-              leadSpecificDetails={leadSpecificDetails}
-            />
-          </View>
-        )} 
-
-
-      <SwapMapButton mapState={mapType} mapStateSetter={mapTypeSetter} />
-      <LeadPlacementToggle
-        setNewLeadState={setNewLeadState}
-        toggledButtonSetter={toggledButtonSetter}
-        toggleStyleControl={toggleStyleControl}
-        menuState={menuState}
-        setMenuState={setMenuState}
-        setLeadMenuSpecificsIdx={setLeadMenuSpecificsIdx}
-      />
-    </View>
+      </View>
+      : 
+      <View style={styles.mapLoadingScreenContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.mapLoadingScreenText}>Fetching Location...</Text>
+      </View>
+      }
+    </>
   )
 }
 
@@ -486,6 +497,18 @@ cluster: {
     alignItems: "center",
     // Optional: add elevation for Android
     elevation: 5,
+  },
+  mapLoadingScreenContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "white", // change if you want a different background
+  },
+  mapLoadingScreenText: {
+    marginTop: 15,
+    fontSize: 18,
+    color: "#333",
+    fontWeight: "500",
   },
 });
 
