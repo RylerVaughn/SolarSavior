@@ -21,39 +21,129 @@ const leadTypes = {
   null: require("./Images/null.png")
 }
 
-
-function Map({ hasPermission }) {
-  const [mapType, mapTypeSetter] = useState("satellite");
-  const [newLeadState, setNewLeadState] = useState("");
-  const [leads, setLeads] = useState([]);
-  const [toggledButton, toggledButtonSetter] = useState(null);
-  const [leadMenuSpecificsIdx, setLeadMenuSpecificsIdx] = useState(null);
-  const [leadSpecificDetails, setLeadSpecificDetails] = useState({});
-  const [menuState, setMenuState] = useState(false);
-  const [region, setRegion] = useState({
-    latitude: 34.4208,
-    longitude: -119.6982,
-    latitudeDelta: 0.5,
-    longitudeDelta: 0.5,
-  });
+function Navigation() {
+  const [hasPermission, setHasPermission] = useState(false);
   const [userFound, setUserFound] = useState(false);
+  const [userInitialLocation, setUserInitialLocation] = useState();
+  const [leads, setLeads] = useState([]);
+  const [region, setRegion] = useState({
+    latitude: 37.7749,    
+    longitude: -122.4194,
+    latitudeDelta: 0.0922,  
+    longitudeDelta: 0.0421,
+  });
+
+  useEffect(() => {
+    (async () => {
+      const res = await userLocationAvailable();
+      setHasPermission(res);
+    })()
+  }, [])
 
   useEffect(() => {
     if (hasPermission) {
       (async () => {
         let { coords } = await Location.getCurrentPositionAsync({});
-        setRegion(prev => ({
+        setUserInitialLocation({
           latitude: coords.latitude,
           longitude: coords.longitude,
-          latitudeDelta: prev.latitudeDelta,
-          longitudeDelta: prev.longitudeDelta,
-        }));
+          latitudeDelta: 0.5,
+          longitudeDelta: 0.5,
+        });
         setUserFound(true);
       })()
     }
   }, [hasPermission]);
 
+  return (
+    <NavigationContainer>
+      <Tab.Navigator screenOptions={{ headerShown: false }}>
+        <Tab.Screen name="Welcome" component={Welcome} />
+        <Tab.Screen name="Map">
+          {() => <MapTab  
+          hasPermission={hasPermission} 
+          userInitialLocation={userInitialLocation} 
+          userFound={userFound} 
+          leads={leads} 
+          setLeads={setLeads} 
+          region={region} 
+          setRegion={setRegion}/>}
+        </Tab.Screen>
+      </Tab.Navigator>
+    </NavigationContainer>
+  )
+}
+
+
+function MapTab({ userInitialLocation, userFound, hasPermission, leads, setLeads, region, setRegion }) {
+  const [userWantsLocationDisplayed, setUserWantsLocationDisplayed] = useState(true);
+  const [displayMap, setDisplayMap] = useState(false);
+
+  useEffect(() => {
+    if (userFound) {
+      console.log(`userFound: ${userFound}, setting displayMap true...`)
+      setDisplayMap(true);
+    }
+  }, [userFound])
+
+  return (
+    <>
+    {displayMap ?
+        <Map 
+        hasPermission={hasPermission} 
+        userInitialLocation={userInitialLocation} 
+        leads={leads} 
+        setLeads={setLeads} 
+        region={region} 
+        setRegion={setRegion}
+        userWantsLocationDisplayed={userWantsLocationDisplayed}
+        userFound={userFound}/>
+      :
+        <MapLoadingScreen 
+        setUserWantsLocationDisplayed={setUserWantsLocationDisplayed}
+        setDisplayMap={setDisplayMap}/>
+    }
+    </>
+  )
+}
+
+
+
+
+function MapLoadingScreen({ setUserWantsLocationDisplayed, setDisplayMap }) {
+  return (
+    <View style={styles.mapLoadingScreenContainer}>
+      <ActivityIndicator size="large" color="#007AFF" />
+      <Text style={styles.mapLoadingScreenText}>Fetching Location...</Text>
+      <Button title="Cancel" onPress={() => {
+        setUserWantsLocationDisplayed(false)
+        setDisplayMap(true);
+        }}></Button>
+    </View>
+  )
+}
+
+
+
+
+
+function Map({ hasPermission, userFound, userInitialLocation, leads, setLeads, region, setRegion, userWantsLocationDisplayed }) {
+  const [mapType, mapTypeSetter] = useState("satellite");
+  const [newLeadState, setNewLeadState] = useState("");
+  const [toggledButton, toggledButtonSetter] = useState(null);
+  const [leadMenuSpecificsIdx, setLeadMenuSpecificsIdx] = useState(null);
+  const [leadSpecificDetails, setLeadSpecificDetails] = useState({});
+  const [menuState, setMenuState] = useState(false);
   const mapRef = useRef(null);
+
+  useEffect(() => {
+  console.log(`userFound: ${userFound}`);
+  console.log(`userWantsLocationDisplayed: ${userWantsLocationDisplayed}`);
+    if (userFound && userWantsLocationDisplayed) {
+      console.log("Region Set!!");
+      setRegion(userInitialLocation);
+    }
+  }, [userFound, userWantsLocationDisplayed]);
 
   function toggleStyleControl(key) {
     if (toggledButton == key) {
@@ -121,8 +211,6 @@ function Map({ hasPermission }) {
 
 
   return (
-    <>
-    {userFound ?
       <View style={{ flex: 1 }}>
         <MapView
           ref={mapRef}
@@ -210,15 +298,11 @@ function Map({ hasPermission }) {
           setLeadMenuSpecificsIdx={setLeadMenuSpecificsIdx}
         />
       </View>
-      : 
-      <View style={styles.mapLoadingScreenContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.mapLoadingScreenText}>Fetching Location...</Text>
-      </View>
-      }
-    </>
   )
 }
+
+
+
 
 
 
@@ -234,6 +318,9 @@ function SwapMapButton({ mapState, mapStateSetter }) {
   )
 }
 
+
+
+
 function Welcome() {
   return (
     <View style={styles.centered}>
@@ -241,6 +328,10 @@ function Welcome() {
     </View>
   )
 }
+
+
+
+
 
 async function userLocationAvailable() {
   const req = await Location.requestForegroundPermissionsAsync();
@@ -252,27 +343,8 @@ async function userLocationAvailable() {
   return true;
 }
 
-function Navigation() {
-  const [hasPermission, setHasPermission] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      const res = await userLocationAvailable();
-      setHasPermission(res);
-    })()
-  }, [])
 
-  return (
-    <NavigationContainer>
-      <Tab.Navigator screenOptions={{ headerShown: false }}>
-        <Tab.Screen name="Welcome" component={Welcome} />
-        <Tab.Screen name="Map">
-          {() => <Map hasPermission={hasPermission} />}
-        </Tab.Screen>
-      </Tab.Navigator>
-    </NavigationContainer>
-  )
-}
 
 function LeadPlacementToggle({ setNewLeadState, toggleStyleControl, toggledButtonSetter, menuState, setMenuState, setLeadMenuSpecificsIdx }) {
 
@@ -295,6 +367,8 @@ function LeadPlacementToggle({ setNewLeadState, toggleStyleControl, toggledButto
     </>
   )
 }
+
+
 
 
 function LeadPlacementMenu({ visible, setNewLeadState, toggledButtonSetter, toggleStyleControl }) {
@@ -342,6 +416,9 @@ function LeadPlacementMenu({ visible, setNewLeadState, toggledButtonSetter, togg
 }
 
 
+
+
+
 function LeadMoreDetailsMenu({ id, leadSpecificDetails }) {
   const slideAnim = useRef(new Animated.Value(height)).current;
   const leadSpecifics = leadSpecificDetails[id];
@@ -381,6 +458,9 @@ function LeadMoreDetailsMenu({ id, leadSpecificDetails }) {
     </Animated.View>
   );
 }
+
+
+
 
 const styles = StyleSheet.create({
   null: {},
