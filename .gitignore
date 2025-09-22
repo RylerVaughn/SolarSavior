@@ -39,3 +39,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# custom
+index.js
+app.json
+assets/
+
