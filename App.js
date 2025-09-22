@@ -1,6 +1,6 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Button, Text, View, StyleSheet, Animated, Dimensions, Image, TouchableOpacity, ActivityIndicator } from "react-native";
+import { Button, Text, View, StyleSheet, Animated, Dimensions, Image, TouchableOpacity, ActivityIndicator, TextInput } from "react-native";
 import { useState, useEffect, useRef } from "react";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from 'expo-location';
@@ -81,7 +81,6 @@ function MapTab({ userInitialLocation, userFound, hasPermission, leads, setLeads
 
   useEffect(() => {
     if (userFound) {
-      console.log(`userFound: ${userFound}, setting displayMap true...`)
       setDisplayMap(true);
     }
   }, [userFound])
@@ -137,10 +136,7 @@ function Map({ hasPermission, userFound, userInitialLocation, leads, setLeads, r
   const mapRef = useRef(null);
 
   useEffect(() => {
-  console.log(`userFound: ${userFound}`);
-  console.log(`userWantsLocationDisplayed: ${userWantsLocationDisplayed}`);
     if (userFound && userWantsLocationDisplayed) {
-      console.log("Region Set!!");
       setRegion(userInitialLocation);
     }
   }, [userFound, userWantsLocationDisplayed]);
@@ -423,13 +419,29 @@ function LeadMoreDetailsMenu({ id, leadSpecificDetails }) {
   const slideAnim = useRef(new Animated.Value(height)).current;
   const leadSpecifics = leadSpecificDetails[id];
 
+  const [name, setName] = useState(leadSpecifics?.name || "");
+  const [phone, setPhone] = useState(leadSpecifics?.phone || "");
+
+  useEffect(() => {
+    if (leadSpecifics) {
+      leadSpecifics.name = name;
+      leadSpecifics.phone = phone;
+    }
+  }, [name, phone]);
+
   useEffect(() => {
     Animated.timing(slideAnim, {
-      toValue: 0, // final position at bottom
+      toValue: 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
   }, []);
+
+  // Simple phone validation: allow only digits
+  const handlePhoneChange = (text) => {
+    const cleaned = text.replace(/[^0-9]/g, ""); // remove non-digits
+    setPhone(cleaned);
+  };
 
   return (
     <Animated.View
@@ -444,16 +456,31 @@ function LeadMoreDetailsMenu({ id, leadSpecificDetails }) {
 
       <Image style={styles.leadIcon} source={leadTypes[leadSpecifics.icon]} />
 
-      {/* Info fields (placeholders for now) */}
       <View style={{ marginTop: 20 }}>
+        {/* Name input */}
         <Text style={styles.fieldLabel}>Name:</Text>
-        <Text style={styles.fieldValue}>[Placeholder Name]</Text>
+        <TextInput
+          style={styles.input}
+          value={leadSpecifics.name}
+          onChangeText={setName}
+          placeholder="Enter name"
+        />
 
+        {/* Phone input */}
         <Text style={styles.fieldLabel}>Phone Number:</Text>
-        <Text style={styles.fieldValue}>[Placeholder Phone]</Text>
+        <TextInput
+          style={styles.input}
+          value={leadSpecifics.phone}
+          onChangeText={handlePhoneChange}
+          keyboardType="phone-pad"
+          placeholder="Enter phone number"
+        />
 
+        {/* Address stays read-only */}
         <Text style={styles.fieldLabel}>Address:</Text>
-        <Text style={styles.fieldValue}>{leadSpecifics != null ? leadSpecifics.address : "Loading..."}</Text>
+        <Text style={styles.fieldValue}>
+          {leadSpecifics != null ? leadSpecifics.address : "Loading..."}
+        </Text>
       </View>
     </Animated.View>
   );
@@ -464,6 +491,13 @@ function LeadMoreDetailsMenu({ id, leadSpecificDetails }) {
 
 const styles = StyleSheet.create({
   null: {},
+   input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 10,
+  },
   swapMapContainer: {
     position: "absolute",
     top: 50,
