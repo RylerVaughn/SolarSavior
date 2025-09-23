@@ -34,6 +34,7 @@ function Navigation() {
     latitudeDelta: 0.0922,  
     longitudeDelta: 0.0421,
   });
+  const leadLookup = new Map();
 
   useEffect(() => {
     (async () => {
@@ -63,6 +64,7 @@ function Navigation() {
         <Tab.Screen name="Welcome" component={Welcome} />
         <Tab.Screen name="Map">
           {() => <MapTab  
+          leadLookup={leadLookup}
           hasPermission={hasPermission} 
           userInitialLocation={userInitialLocation} 
           userFound={userFound} 
@@ -77,7 +79,7 @@ function Navigation() {
 }
 
 
-function MapTab({ userInitialLocation, userFound, hasPermission, leads, setLeads, region, setRegion }) {
+function MapTab({ leadLookup, userInitialLocation, userFound, hasPermission, leads, setLeads, region, setRegion }) {
   const [userWantsLocationDisplayed, setUserWantsLocationDisplayed] = useState(true);
   const [displayMap, setDisplayMap] = useState(false);
 
@@ -90,7 +92,7 @@ function MapTab({ userInitialLocation, userFound, hasPermission, leads, setLeads
   return (
     <>
     {displayMap ?
-        <Map 
+        <CustomMap 
         hasPermission={hasPermission} 
         userInitialLocation={userInitialLocation} 
         leads={leads} 
@@ -98,7 +100,9 @@ function MapTab({ userInitialLocation, userFound, hasPermission, leads, setLeads
         region={region} 
         setRegion={setRegion}
         userWantsLocationDisplayed={userWantsLocationDisplayed}
-        userFound={userFound}/>
+        userFound={userFound}
+        leadLookup={leadLookup}
+        />
       :
         <MapLoadingScreen 
         setUserWantsLocationDisplayed={setUserWantsLocationDisplayed}
@@ -128,7 +132,7 @@ function MapLoadingScreen({ setUserWantsLocationDisplayed, setDisplayMap }) {
 
 
 
-function Map({ hasPermission, userFound, userInitialLocation, leads, setLeads, region, setRegion, userWantsLocationDisplayed }) {
+function CustomMap({ leadLookup, hasPermission, userFound, userInitialLocation, leads, setLeads, region, setRegion, userWantsLocationDisplayed }) {
   const [mapType, mapTypeSetter] = useState("satellite");
   const [newLeadState, setNewLeadState] = useState("");
   const [toggledButton, toggledButtonSetter] = useState(null);
@@ -159,7 +163,21 @@ function Map({ hasPermission, userFound, userInitialLocation, leads, setLeads, r
 
     const coordinates = event.nativeEvent.coordinate;
 
-    if (newLeadState !== "") {
+    addLead(coordinates, newLeadState);
+  }
+
+  useEffect(() => {
+    if (leadMenuSpecificsIdx != null && menuState) {
+      setMenuState(false);
+    }
+  }, [leadMenuSpecificsIdx, menuState]);
+
+
+  async function addLead(coordinates, leadState) {
+    if (leadState !== "") {
+
+      const leadId = uuidv4();
+
       const newLeadData = {
         type: "Feature",
         geometry: {
@@ -170,11 +188,12 @@ function Map({ hasPermission, userFound, userInitialLocation, leads, setLeads, r
           ]
         },
         properties: {
-          id: uuidv4(),
-          icon: newLeadState,
+          id: leadId,
+          icon: leadState,
         }
       }
 
+      leadLookup.set(id, newLeadData);
       setLeads(prev => [...prev, newLeadData]);
       setNewLeadState("");
       toggledButtonSetter(null);
@@ -194,18 +213,18 @@ function Map({ hasPermission, userFound, userInitialLocation, leads, setLeads, r
       setLeadSpecificDetails(prev => ({
         ...prev,
         [newLeadData.properties.id]: {
-          icon: newLeadState,
+          icon: leadState,
           address: address
         }
       }));
     }
   }
 
-  useEffect(() => {
-    if (leadMenuSpecificsIdx != null && menuState) {
-      setMenuState(false);
-    }
-  }, [leadMenuSpecificsIdx, menuState]);
+
+  async function deleteLead(id) {
+    leadLookup.delete(id);
+    setLeads(Array.from(leadLookup.values()));
+  }
 
 
   return (
@@ -282,6 +301,7 @@ function Map({ hasPermission, userFound, userInitialLocation, leads, setLeads, r
                 id={leadMenuSpecificsIdx} 
                 leadSpecificDetails={leadSpecificDetails}
                 leadSpecificDetailsSetter={setLeadSpecificDetails}
+                deleteLead={deleteLead}
               />
             </View>
           )} 
@@ -417,7 +437,7 @@ function LeadPlacementMenu({ visible, setNewLeadState, toggledButtonSetter, togg
 
 
 
-function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSetter }) {
+function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSetter, deleteLead }) {
   const slideAnim = useRef(new Animated.Value(height)).current;
   const leadSpecifics = leadSpecificDetails[id];
 
@@ -461,7 +481,7 @@ function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSette
           "Are you sure you want to remove this lead?",
           [
             { text: "Cancel" },
-            { text: "Delete" }
+            { text: "Delete", onPress: () => deleteLead(id) }
           ]
         )
       }}>
