@@ -1,6 +1,8 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Button, Text, View, StyleSheet, Animated, Dimensions, Image, TouchableOpacity, ActivityIndicator, TextInput } from "react-native";
+import { Button, Text, View, StyleSheet, 
+  Animated, Dimensions, Image, TouchableOpacity, 
+  ActivityIndicator, TextInput, Alert } from "react-native";
 import { useState, useEffect, useRef } from "react";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from 'expo-location';
@@ -422,14 +424,21 @@ function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSette
   const [name, setName] = useState(leadSpecifics?.name || "");
   const [phone, setPhone] = useState(leadSpecifics?.phone || "");
 
+  // When `id` changes, reset the local state for the new lead
+  useEffect(() => {
+    setName(leadSpecifics?.name || "");
+    setPhone(leadSpecifics?.phone || "");
+  }, [id]);
+
+  // Push local state back up to parent
   useEffect(() => {
     if (id && leadSpecificDetails) {
       leadSpecificDetailsSetter(prev => ({
         ...prev,
-        [id]: { ...leadSpecifics, name, phone }
+        [id]: { ...prev[id], name, phone },
       }));
     }
-  }, [name, phone]);
+  }, [id, name, phone]);
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -445,17 +454,17 @@ function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSette
   };
 
   return (
-    <Animated.View
-      style={[
-        styles.detailsMenu,
-        { transform: [{ translateY: slideAnim }] },
-      ]}
-    >
-      {/* Remove button in top-right */}
-      <TouchableOpacity 
-        style={styles.removeButtonTopRight} 
-        onPress={() => { /* your remove logic here */ }}
-      >
+    <Animated.View style={[styles.detailsMenu, { transform: [{ translateY: slideAnim }] }]}>
+      <TouchableOpacity style={styles.removeButtonTopRight} onPress={() => {
+        Alert.alert(
+          "Delete Lead?",
+          "Are you sure you want to remove this lead?",
+          [
+            { text: "Cancel" },
+            { text: "Delete" }
+          ]
+        )
+      }}>
         <Text style={styles.removeButtonText}>✕</Text>
       </TouchableOpacity>
 
@@ -470,7 +479,7 @@ function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSette
         <Text style={styles.fieldLabel}>Name:</Text>
         <TextInput
           style={styles.input}
-          value={leadSpecifics.name}
+          value={name}
           onChangeText={setName}
           placeholder="Enter name"
         />
@@ -479,7 +488,7 @@ function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSette
         <Text style={styles.fieldLabel}>Phone Number:</Text>
         <TextInput
           style={styles.input}
-          value={leadSpecifics.phone}
+          value={phone}
           onChangeText={handlePhoneChange}
           keyboardType="phone-pad"
           placeholder="Enter phone number"
