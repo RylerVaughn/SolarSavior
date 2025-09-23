@@ -415,7 +415,6 @@ function LeadPlacementMenu({ visible, setNewLeadState, toggledButtonSetter, togg
 
 
 
-
 function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSetter }) {
   const slideAnim = useRef(new Animated.Value(height)).current;
   const leadSpecifics = leadSpecificDetails[id];
@@ -424,14 +423,13 @@ function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSette
   const [phone, setPhone] = useState(leadSpecifics?.phone || "");
 
   useEffect(() => {
-  if (id && leadSpecificDetails) {
-    leadSpecificDetailsSetter(prev => ({
-      ...prev,
-      [id]: { ...leadSpecifics, name, phone }
-    }));
-  }
-}, [name, phone]);
-
+    if (id && leadSpecificDetails) {
+      leadSpecificDetailsSetter(prev => ({
+        ...prev,
+        [id]: { ...leadSpecifics, name, phone }
+      }));
+    }
+  }, [name, phone]);
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -441,9 +439,8 @@ function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSette
     }).start();
   }, []);
 
-  // Simple phone validation: allow only digits
   const handlePhoneChange = (text) => {
-    const cleaned = text.replace(/[^0-9]/g, ""); // remove non-digits
+    const cleaned = text.replace(/[^0-9]/g, "");
     setPhone(cleaned);
   };
 
@@ -454,6 +451,14 @@ function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSette
         { transform: [{ translateY: slideAnim }] },
       ]}
     >
+      {/* Remove button in top-right */}
+      <TouchableOpacity 
+        style={styles.removeButtonTopRight} 
+        onPress={() => { /* your remove logic here */ }}
+      >
+        <Text style={styles.removeButtonText}>✕</Text>
+      </TouchableOpacity>
+
       <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}>
         Lead Details
       </Text>
@@ -480,7 +485,7 @@ function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSette
           placeholder="Enter phone number"
         />
 
-        {/* Address stays read-only */}
+        {/* Address (read-only) */}
         <Text style={styles.fieldLabel}>Address:</Text>
         <Text style={styles.fieldValue}>
           {leadSpecifics != null ? leadSpecifics.address : "Loading..."}
@@ -627,6 +632,27 @@ cluster: {
     fontSize: 18,
     color: "#333",
     fontWeight: "500",
+  },
+  removeButtonTopRight: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "#FF3B30",
+    borderRadius: 16,
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 4, // Android shadow
+    shadowColor: "#000", // iOS shadow
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  removeButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
 
