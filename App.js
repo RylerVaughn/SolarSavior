@@ -34,7 +34,7 @@ function Navigation() {
     latitudeDelta: 0.0922,  
     longitudeDelta: 0.0421,
   });
-  const leadLookup = new Map();
+  const leadLookup = useRef(new Map());
 
   useEffect(() => {
     (async () => {
@@ -162,8 +162,7 @@ function CustomMap({ leadLookup, hasPermission, userFound, userInitialLocation, 
     }
 
     const coordinates = event.nativeEvent.coordinate;
-
-    addLead(coordinates, newLeadState);
+    await addLead(coordinates, newLeadState);
   }
 
   useEffect(() => {
@@ -174,8 +173,8 @@ function CustomMap({ leadLookup, hasPermission, userFound, userInitialLocation, 
 
 
   async function addLead(coordinates, leadState) {
-    if (leadState !== "") {
 
+    if (leadState !== "") {
       const leadId = uuidv4();
 
       const newLeadData = {
@@ -193,7 +192,7 @@ function CustomMap({ leadLookup, hasPermission, userFound, userInitialLocation, 
         }
       }
 
-      leadLookup.set(id, newLeadData);
+      leadLookup.current.set(leadId, newLeadData);
       setLeads(prev => [...prev, newLeadData]);
       setNewLeadState("");
       toggledButtonSetter(null);
@@ -222,8 +221,23 @@ function CustomMap({ leadLookup, hasPermission, userFound, userInitialLocation, 
 
 
   async function deleteLead(id) {
-    leadLookup.delete(id);
-    setLeads(Array.from(leadLookup.values()));
+    setLeadMenuSpecificsIdx(null);
+    leadLookup.current.delete(id);
+    setLeads(Array.from(leadLookup.current.values()));
+    setLeadSpecificDetails((prev) => {
+      const { [id]: _, ...rest } = prev;
+      return rest;
+    });
+  }
+
+  function editLeadIcon(id, icon, leadSpecificDetailsSetter) {
+    const targetLead = leadLookup.current.get(id);
+    targetLead.properties.icon = icon;
+    setLeads(Array.from(leadLookup.current.values()));
+    leadSpecificDetailsSetter(prev => ({
+      ...prev,
+      [id]: { ...prev[id], icon: icon }
+    }))
   }
 
 
@@ -302,6 +316,7 @@ function CustomMap({ leadLookup, hasPermission, userFound, userInitialLocation, 
                 leadSpecificDetails={leadSpecificDetails}
                 leadSpecificDetailsSetter={setLeadSpecificDetails}
                 deleteLead={deleteLead}
+                editLeadIcon={editLeadIcon}
               />
             </View>
           )} 
@@ -437,7 +452,7 @@ function LeadPlacementMenu({ visible, setNewLeadState, toggledButtonSetter, togg
 
 
 
-function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSetter, deleteLead }) {
+function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSetter, deleteLead, editLeadIcon }) {
   const slideAnim = useRef(new Animated.Value(height)).current;
   const leadSpecifics = leadSpecificDetails[id];
 
@@ -492,7 +507,31 @@ function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSette
         Lead Details
       </Text>
 
-      <Image style={styles.leadIcon} source={leadTypes[leadSpecifics.icon]} />
+      <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 10 }}>
+    {/* Main lead icon */}
+    <Image style={styles.leadIcon} source={leadTypes[leadSpecifics.icon]} />
+
+    {/* Swap options */}
+    <View style={{ flexDirection: "row", marginLeft: 15 }}>
+      <TouchableOpacity
+        onPress={() => editLeadIcon(id, "successful", leadSpecificDetailsSetter)}
+      >
+      <Image style={styles.smallIcon} source={leadTypes.successful} />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => editLeadIcon(id, "unsuccessful", leadSpecificDetailsSetter)}
+      >
+        <Image style={styles.smallIcon} source={leadTypes.unsuccessful} />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => editLeadIcon(id, "null", leadSpecificDetailsSetter)}
+      >
+        <Image style={styles.smallIcon} source={leadTypes.null} />
+      </TouchableOpacity>
+    </View>
+  </View>
 
       <View style={{ marginTop: 20 }}>
         {/* Name input */}
@@ -529,7 +568,13 @@ function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSette
 
 const styles = StyleSheet.create({
   null: {},
-   input: {
+  smallIcon: {
+    width: 35,
+    height: 35,
+    resizeMode: "contain",
+    marginHorizontal: 5,
+  },
+  input: {
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
