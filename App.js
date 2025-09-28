@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useState, useEffect, useRef } from "react";
 import * as Location from 'expo-location';
 
-import WelcomeScreen from './screens/WelcomeScreen';
+import HomeScreen from './screens/HomeScreen';
 import MapScreen from './screens/MapScreen';
 import { userLocationAvailable } from './utils/userLocation';
 
@@ -31,15 +31,19 @@ function Navigation() {
 
   useEffect(() => {
     (async () => {
+      console.log("WAITING");
       const res = await userLocationAvailable();
       setHasPermission(res);
+      console.log(hasPermission);
     })();
   }, []);
 
   useEffect(() => {
     if (hasPermission) {
       (async () => {
+        console.log("waiting...")
         let { coords } = await Location.getCurrentPositionAsync({});
+        console.log("done!!");
         setUserInitialLocation({
           latitude: coords.latitude,
           longitude: coords.longitude,
@@ -54,7 +58,7 @@ function Navigation() {
   return (
     <NavigationContainer>
       <Tab.Navigator screenOptions={{ headerShown: false }}>
-        <Tab.Screen name="Welcome" component={WelcomeScreen} />
+        <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Map">
           {() => (
             <MapScreen

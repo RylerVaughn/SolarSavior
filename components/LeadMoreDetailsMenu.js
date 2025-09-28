@@ -1,22 +1,38 @@
-import { Text, View, StyleSheet, Animated, Image, TouchableOpacity, TextInput, Alert, Dimensions } from "react-native";
+import { 
+  Text, 
+  View, 
+  StyleSheet, 
+  Animated, 
+  Image, 
+  TouchableOpacity, 
+  TextInput, 
+  Alert, 
+  Dimensions 
+} from "react-native";
 import { useState, useEffect, useRef } from "react";
 import 'react-native-get-random-values';
+
 const { width, height } = Dimensions.get("window");
 
-export default function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpecificDetailsSetter, deleteLead, editLeadIcon, leadTypes }) {
+export default function LeadMoreDetailsMenu({ 
+  id, 
+  leadSpecificDetails, 
+  leadSpecificDetailsSetter, 
+  deleteLead, 
+  editLeadIcon, 
+  leadTypes 
+}) {
   const slideAnim = useRef(new Animated.Value(height)).current;
   const leadSpecifics = leadSpecificDetails[id];
 
   const [name, setName] = useState(leadSpecifics?.name || "");
   const [phone, setPhone] = useState(leadSpecifics?.phone || "");
 
-  // When `id` changes, reset the local state for the new lead
   useEffect(() => {
     setName(leadSpecifics?.name || "");
     setPhone(leadSpecifics?.phone || "");
   }, [id]);
 
-  // Push local state back up to parent
   useEffect(() => {
     if (id && leadSpecificDetails) {
       leadSpecificDetailsSetter(prev => ({
@@ -29,7 +45,7 @@ export default function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpeci
   useEffect(() => {
     Animated.timing(slideAnim, {
       toValue: 0,
-      duration: 300,
+      duration: 280,
       useNativeDriver: true,
     }).start();
   }, []);
@@ -41,73 +57,70 @@ export default function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpeci
 
   return (
     <Animated.View style={[styles.detailsMenu, { transform: [{ translateY: slideAnim }] }]}>
-      <TouchableOpacity style={styles.removeButtonTopRight} onPress={() => {
-        Alert.alert(
-          "Delete Lead?",
-          "Are you sure you want to remove this lead?",
-          [
-            { text: "Cancel" },
-            { text: "Delete", onPress: () => deleteLead(id) }
-          ]
-        )
-      }}>
+      
+      {/* Close/Delete */}
+      <TouchableOpacity 
+        style={styles.removeButtonTopRight} 
+        onPress={() => {
+          Alert.alert(
+            "Delete Lead?",
+            "This action cannot be undone.",
+            [
+              { text: "Cancel", style: "cancel" },
+              { text: "Delete", style: "destructive", onPress: () => deleteLead(id) }
+            ]
+          )
+        }}
+      >
         <Text style={styles.removeButtonText}>✕</Text>
       </TouchableOpacity>
 
-      <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}>
-        Lead Details
-      </Text>
+      {/* Header */}
+      <Text style={styles.header}>Lead Details</Text>
 
-      <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 10 }}>
-    {/* Main lead icon */}
-    <Image style={styles.leadIcon} source={leadTypes[leadSpecifics.icon]} />
+      {/* Lead Icon & Status */}
+      <View style={styles.iconRow}>
+        <Image style={styles.leadIcon} source={leadTypes[leadSpecifics.icon]} />
+        <View style={styles.swapRow}>
+          {["successful", "unsuccessful", "null"].map(type => (
+            <TouchableOpacity 
+              key={type} 
+              onPress={() => editLeadIcon(id, type, leadSpecificDetailsSetter)}
+              style={[
+                styles.iconWrapper, 
+                leadSpecifics.icon === type && styles.iconWrapperSelected
+              ]}
+            >
+              <Image style={styles.smallIcon} source={leadTypes[type]} />
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
 
-    {/* Swap options */}
-    <View style={{ flexDirection: "row", marginLeft: 15 }}>
-      <TouchableOpacity
-        onPress={() => editLeadIcon(id, "successful", leadSpecificDetailsSetter)}
-      >
-      <Image style={styles.smallIcon} source={leadTypes.successful} />
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => editLeadIcon(id, "unsuccessful", leadSpecificDetailsSetter)}
-      >
-        <Image style={styles.smallIcon} source={leadTypes.unsuccessful} />
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => editLeadIcon(id, "null", leadSpecificDetailsSetter)}
-      >
-        <Image style={styles.smallIcon} source={leadTypes.null} />
-      </TouchableOpacity>
-    </View>
-  </View>
-
+      {/* Fields */}
       <View style={{ marginTop: 20 }}>
-        {/* Name input */}
-        <Text style={styles.fieldLabel}>Name:</Text>
+        <Text style={styles.fieldLabel}>Name</Text>
         <TextInput
           style={styles.input}
           value={name}
           onChangeText={setName}
           placeholder="Enter name"
+          placeholderTextColor="#999"
         />
 
-        {/* Phone input */}
-        <Text style={styles.fieldLabel}>Phone Number:</Text>
+        <Text style={styles.fieldLabel}>Phone Number</Text>
         <TextInput
           style={styles.input}
           value={phone}
           onChangeText={handlePhoneChange}
           keyboardType="phone-pad"
           placeholder="Enter phone number"
+          placeholderTextColor="#999"
         />
 
-        {/* Address (read-only) */}
-        <Text style={styles.fieldLabel}>Address:</Text>
+        <Text style={styles.fieldLabel}>Address</Text>
         <Text style={styles.fieldValue}>
-          {leadSpecifics != null ? leadSpecifics.address : "Loading..."}
+          {leadSpecifics ? leadSpecifics.address : "Loading..."}
         </Text>
       </View>
     </Animated.View>
@@ -115,166 +128,100 @@ export default function LeadMoreDetailsMenu({ id, leadSpecificDetails, leadSpeci
 }
 
 const styles = StyleSheet.create({
-  null: {},
-  smallIcon: {
-    width: 35,
-    height: 35,
-    resizeMode: "contain",
-    marginHorizontal: 5,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 10,
-  },
-  swapMapContainer: {
-    position: "absolute",
-    top: 50,
-    right: 20,
-    backgroundColor: "white",
-    borderRadius: 8,
-    overflow: "hidden",
-    padding: 5,
-  },
-  toggleLeadMenuContainer: {
-    position: "absolute",
-    top: 110,
-    right: 20,
-    backgroundColor: "white",
-    borderRadius: 8,
-    overflow: "hidden",
-    padding: 5,
-  },
-  leadMenu: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    height: 200, // height of popup
-    backgroundColor: "white",
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    padding: 20,
-    elevation: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  leadMenuText: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  leadMenuRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 15,
-  },
-  leadIcon: {
-    width: 60,
-    height: 60,
-    resizeMode: "contain",
-    marginHorizontal: 10,
-  },
-
-  leadIconToggled: {
-    borderWidth: 3,
-    borderColor: "#007BFF",
-    borderRadius: 30, // half of width/height → perfect circle
-    padding: 5, // ensures the border doesn’t overlap the PNG
-  },
-
   detailsMenu: {
     position: "absolute",
     left: 0,
     right: 0,
-    height: height * 0.4, // ~2/5 of screen
-    backgroundColor: "white",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 20,
-    elevation: 10,
+    height: height * 0.48,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    elevation: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
-    bottom: 0, // ensures it slides up from the bottom
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    bottom: 0,
   },
-
-  // New field styles
-  fieldLabel: {
+  header: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 20,
+    color: "#222",
+  },
+  iconRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  swapRow: {
+    flexDirection: "row",
+    marginLeft: 20,
+  },
+  iconWrapper: {
+    padding: 6,
+    borderRadius: 10,
+    marginHorizontal: 6,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  iconWrapperSelected: {
+    borderColor: "#007BFF",
+    backgroundColor: "rgba(0,123,255,0.1)",
+  },
+  smallIcon: {
+    width: 32,
+    height: 32,
+    resizeMode: "contain",
+  },
+  leadIcon: {
+    width: 64,
+    height: 64,
+    resizeMode: "contain",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 10,
+    padding: 12,
     fontSize: 16,
+    marginTop: 6,
+    marginBottom: 14,
+    color: "#222",
+    backgroundColor: "#fafafa",
+  },
+  fieldLabel: {
+    fontSize: 14,
     fontWeight: "600",
-    marginTop: 12,
-    color: "#333",
+    color: "#444",
+    marginBottom: 4,
   },
   fieldValue: {
     fontSize: 16,
     color: "#555",
-    marginBottom: 8,
-  },
-  clusterContainer: {
-  backgroundColor: "#007BFF",
-  justifyContent: "center",
-  alignItems: "center",
-  borderWidth: 2,
-  borderColor: "#fff",
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.3,
-  shadowRadius: 2,
-  elevation: 4,
-},
-clusterText: {
-  color: "#fff",
-  fontWeight: "700",
-  fontSize: 14,
-},
-cluster: {
-    backgroundColor: "#007AFF",
-    borderWidth: 2,
-    borderColor: "#fff",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    // Optional: add elevation for Android
-    elevation: 5,
-  },
-  mapLoadingScreenContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "white", // change if you want a different background
-  },
-  mapLoadingScreenText: {
-    marginTop: 15,
-    fontSize: 18,
-    color: "#333",
-    fontWeight: "500",
+    marginBottom: 14,
   },
   removeButtonTopRight: {
     position: "absolute",
-    top: 10,
-    right: 10,
-    backgroundColor: "#FF3B30",
-    borderRadius: 16,
-    width: 32,
-    height: 32,
+    top: 14,
+    right: 14,
+    backgroundColor: "#eee",
+    borderRadius: 20,
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
-    elevation: 4, // Android shadow
-    shadowColor: "#000", // iOS shadow
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
   },
   removeButtonText: {
-    color: "white",
+    color: "#333",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 18,
   },
 });
 
