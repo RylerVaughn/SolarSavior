@@ -1,6 +1,7 @@
 // App.js
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect, useRef } from "react";
 import * as Location from 'expo-location';
 
@@ -31,19 +32,15 @@ function Navigation() {
 
   useEffect(() => {
     (async () => {
-      console.log("WAITING");
       const res = await userLocationAvailable();
       setHasPermission(res);
-      console.log(hasPermission);
     })();
   }, []);
 
   useEffect(() => {
     if (hasPermission) {
       (async () => {
-        console.log("waiting...")
         let { coords } = await Location.getCurrentPositionAsync({});
-        console.log("done!!");
         setUserInitialLocation({
           latitude: coords.latitude,
           longitude: coords.longitude,
@@ -57,7 +54,29 @@ function Navigation() {
 
   return (
     <NavigationContainer>
-      <Tab.Navigator screenOptions={{ headerShown: false }}>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarActiveTintColor: "#007BFF", // highlight color
+          tabBarInactiveTintColor: "#888",
+          tabBarStyle: {
+            backgroundColor: "#fff",
+            borderTopWidth: 0,
+            elevation: 4,
+            height: 65,
+            paddingBottom: 8,
+          },
+          tabBarIcon: ({ color, size }) => {
+            let iconName;
+            if (route.name === "Home") {
+              iconName = "home-outline";
+            } else if (route.name === "Map") {
+              iconName = "map-outline";
+            }
+            return <Ionicons name={iconName} size={24} color={color} />;
+          },
+        })}
+      >
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Map">
           {() => (
